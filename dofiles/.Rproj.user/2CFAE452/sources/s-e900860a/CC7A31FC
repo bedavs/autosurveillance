@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552640901809.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CC7A31FC",
+    "lastKnownWriteTime" : 1551432560,
+    "last_content_update" : 1551432560,
+    "path" : "/autosurveillance/dofiles/2_tb.R",
+    "project_path" : "2_tb.R",
+    "properties" : {
+        "cursorPosition" : "18,36",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

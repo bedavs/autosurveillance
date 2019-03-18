@@ -1,0 +1,66 @@
+DeleteAndCreateFolder <- function(f){
+  Sys.sleep(1)
+  unlink(f,recursive=TRUE,force=TRUE)
+  Sys.sleep(1)
+  suppressWarnings(dir.create(f, recursive = TRUE))
+}
+
+SetDirectories <- function(type="IPD"){
+  todaysDate <- format.Date(Sys.time(),"%Y-%m-%d")
+  
+  if(.Platform$OS.type=="unix"){
+    RESULTS_BASE <- file.path("/results")
+    DOFILES_BASE <- file.path("/autosurveillance",
+                              "dofiles")
+  } else {
+    RESULTS_BASE <- file.path(
+      "G:",
+      "Helseregistre",
+      "MSIS",
+      "Sp\u00F8rringer og data UTEN person-id",
+      "Auto_surveillance",
+      "results")
+    
+    DOFILES_BASE <- file.path("G:",
+                              "Helseregistre",
+                              "MSIS",
+                              "Sp\u00F8rringer og data UTEN person-id",
+                              "Auto_surveillance",
+                              "dofiles")
+  }
+  
+  RESULTS_TODAY <- file.path(RESULTS_BASE,todaysDate)
+  RESULTS_TODAY_ALL_WITH_TITLES <- file.path(RESULTS_BASE,todaysDate,"All_with_titles",type)
+  RESULTS_TODAY_ALL_WITHOUT_TITLES <- file.path(RESULTS_BASE,todaysDate,"All_without_titles",type)
+  RESULTS_TODAY_SHAREPOINT <- file.path(RESULTS_BASE,todaysDate,"Sharepoint",type)
+  DOFILES_DATA <- file.path(DOFILES_BASE,"data")
+  
+  suppressWarnings(dir.create(RESULTS_BASE, recursive = TRUE))
+  
+  DeleteAndCreateFolder(RESULTS_TODAY_ALL_WITH_TITLES)
+  DeleteAndCreateFolder(RESULTS_TODAY_ALL_WITHOUT_TITLES)
+  DeleteAndCreateFolder(RESULTS_TODAY_SHAREPOINT)
+  
+  retval <- list(
+    "RESULTS_BASE"=RESULTS_BASE,
+    "DOFILES_BASE"=DOFILES_BASE,
+    "RESULTS_TODAY"=RESULTS_TODAY,
+    "RESULTS_TODAY_ALL_WITH_TITLES"=RESULTS_TODAY_ALL_WITH_TITLES,
+    "RESULTS_TODAY_ALL_WITHOUT_TITLES"=RESULTS_TODAY_ALL_WITHOUT_TITLES,
+    "RESULTS_TODAY_SHAREPOINT"=RESULTS_TODAY_SHAREPOINT,
+    "DOFILES_DATA"=DOFILES_DATA
+  )
+  
+  return(retval)
+}
+
+BaseFolder <- function(FOLDERS,SUPERFOLDER){
+  if(toupper(SUPERFOLDER)=="SHAREPOINT"){
+    BASE_FOLDER <- FOLDERS$RESULTS_TODAY_SHAREPOINT
+  } else if(toupper(SUPERFOLDER)=="ALL_WITH_TITLES"){
+    BASE_FOLDER <- FOLDERS$RESULTS_TODAY_ALL_WITH_TITLES
+  } else if(toupper(SUPERFOLDER)=="ALL_WITHOUT_TITLES"){
+    BASE_FOLDER <- FOLDERS$RESULTS_TODAY_ALL_WITHOUT_TITLES
+  }
+  return(BASE_FOLDER)
+}

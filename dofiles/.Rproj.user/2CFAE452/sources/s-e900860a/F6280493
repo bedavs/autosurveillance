@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552640921787.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F6280493",
+    "lastKnownWriteTime" : 1551432576,
+    "last_content_update" : 1551432576,
+    "path" : "/autosurveillance/dofiles/5_meningococcal.R",
+    "project_path" : "5_meningococcal.R",
+    "properties" : {
+        "cursorPosition" : "0,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

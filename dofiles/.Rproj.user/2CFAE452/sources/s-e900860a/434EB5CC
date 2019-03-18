@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552640915630.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "434EB5CC",
+    "lastKnownWriteTime" : 1551432572,
+    "last_content_update" : 1551432572,
+    "path" : "/autosurveillance/dofiles/4_pertussis.R",
+    "project_path" : "4_pertussis.R",
+    "properties" : {
+        "cursorPosition" : "0,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

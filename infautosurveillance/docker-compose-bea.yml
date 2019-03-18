@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  rstudio:
+    image: raw996/dhadley:3.4.2
+    volumes:
+      - $HOME/git/:/git/
+      - $HOME/internal_surveillance/data_raw/:/analyses/data_raw/internal_surveillance/
+      - $HOME/internal_surveillance/results/:/dropbox/results_shared/internal_surveillance/
+    ports:
+      - "8789:8789"
