@@ -4,18 +4,23 @@ GetData <- function(FOLDERS){
     list.files("/analyses/data_raw")
     masterData <- data.table(readRDS(file.path(
       "/data",
-      "tb_2018_06_05.RDS")))
+      "tb.RDS")))
     
   } else {
     channel <- RODBC::odbcDriverConnect(connection="Driver={SQL Server};SERVER=dm-prod;DATABASE=MsisAnalyse;")
-    masterData <- RODBC::sqlQuery(channel, "SELECT Pr\u00F8vedato\u00C5r, HendelseType, F\u00F8deland, MorsF\u00F8deland, FarsF\u00F8deland, F\u00F8deverdensdel, Aldersgruppe, Bostedsfylke, Innsykningsorgan, Indikasjon, Herkomst, PeriodeINorge, DyrkningResultat, MikroskopiLuftveisResultat, Rapp_smitteopp, Rifampicin, Isoniazid, Pyrazinamide, Ethambutol, Streptomycin, Behandlingsresultat, IGRAResultat FROM ViewTuberkulose;")
-    #masterData <- RODBC::sqlQuery(channel, "SELECT Paar, Kategori, Fland, Mfland, Ffland, Fverd, Algr, Bofylk, Organ_1, Indik, Herkomst, Pernor, Dyrk_res, Dirluft_res, Rapp_smitteopp, R_res, H_res, P_res, E_res, S_res, Beh_res, IGRA FROM ViewTubData;")
+    #masterData <- RODBC::sqlQuery(channel, "SELECT Pr\u00F8vedato\u00C5r, HendelseType, F\u00F8deland, MorsF\u00F8deland, FarsF\u00F8deland, F\u00F8deverdensdel, Aldersgruppe, Bostedsfylke, Innsykningsorgan, Indikasjon, Herkomst, PeriodeINorge, DyrkningResultat, MikroskopiLuftveisResultat, Rapp_smitteopp, Rifampicin, Isoniazid, Pyrazinamide, Ethambutol, Streptomycin, Behandlingsresultat, IGRAResultat FROM ViewTuberkulose;")
+    #masterData <- RODBC::sqlQuery(channel, "SELECT Paar, Kategori, Fland, Mfland, Ffland, Fverd, Algr, Bofylk, Organ_1, Indik, Herkomst, Pernor, Dyrk_res, Dirluft_res, Rapp_smitteopp, R_res, H_res, P_res, E_res, S_res, Beh_res, IGRA FROM ViewTuberkulose;")
+    masterData <- RODBC::sqlQuery(channel, "SELECT Paar, HendelseType, Fland, Mfland, Ffland, Fverd, Aldgr, Bofylk, Organ, Indik, Herkomst, Pernor, Dyrk_res, Dirluft_res, Rapp_smitteopp, res_R, res_H, res_P, res_E, res_S, Beh_res, IGRA FROM ViewTuberkulose;")
     
     saveRDS(masterData, file=sprintf("%s/tb.RDS",FOLDERS$RESULTS_DATA))
     
+    
+    RODBC::odbcClose(channel)
+    masterData <- data.table(masterData)
+    
     #saveRDS(masterData, file=sprintf("%s/pneumokokk_%s.RDS",RESULTS_BASE,todaysDate))
     #write.table(masterData, file=sprintf("%s/pneumokokk_%s.txt",RESULTS_BASE,todaysDate))
-    
+  }
     names(masterData) <- c(
       "Paar",
       "Kategori",
@@ -25,13 +30,11 @@ GetData <- function(FOLDERS){
       "Fverd",
       "Algr",
       "Bofylk",
-      "Organ_1",
       "Indik",
       "Herkomst",
       "Pernor",
       "Dyrk_res",
       "Dirluft_res",
-      "Rapp_smitteopp",
       "R_res",
       "H_res",
       "P_res",
@@ -71,11 +74,6 @@ GetData <- function(FOLDERS){
     #Pr\u00F8vedato -> Pdato
     #Metode -> Met
     #InnlagtSykehus -> Innlagt
-    
-    RODBC::odbcClose(channel)
-    masterData <- data.table(masterData)
-    
-  }
   
   return(masterData)
 }
@@ -87,7 +85,7 @@ CleanData <- function(data){
   FixNorwegian(data,"Ffland")
   FixNorwegian(data,"Fverd")
   FixNorwegian(data,"Bofylk")
-  FixNorwegian(data,"Organ_1")
+  #FixNorwegian(data,"Organ_1")
   FixNorwegian(data,"Indik")
   FixNorwegian(data,"Herkomst")
   FixNorwegian(data,"Pernor")
@@ -159,33 +157,34 @@ CleanData <- function(data){
   
   ######
   data[, cFylke := as.character(Bofylk)]
+  data[Bofylk=="Oslo (f)", cFylke:="Oslo"]
   data[Bofylk=="Utenfor Fastlands-Norge", cFylke:="Utenfor fastlandet"]
   
   ######
-  data[, cOrganNB:= Organ_1]
-  data[Organ_1 %in% c(
-    "Columna",
-    "Ben/ledd utenom columna",
-    "Columna/ben/ledd"
-  ), cOrganNB:="Ben/ledd/columna"]
-  
-  data[Organ_1 %in% c(
-    "Sentralnervesystem annet enn meninger",
-    "Meninger",
-    "Meninger/CNS"
-  ), cOrganNB:="Sentralnervesystem"]
-  
-  data[Organ_1 %in% c(
-    "Lymfe/hilusglandler"
-  ), cOrganNB:="Lymfeknuter"]
-  
-  with(data, table(Organ_1, cOrganNB, useNA="always"))
-  
-  ######
-  data[, cOrganLungsVsLymphNB := as.character(NA)]
-  data[!is.na(cOrganNB), cOrganLungsVsLymphNB:="Alle andre TB tilfeller"]
-  data[cOrganNB == "Lunge", cOrganLungsVsLymphNB:="TB i lunger"]
-  data[cOrganNB == "Lymfeknuter", cOrganLungsVsLymphNB:="TB i lymfeknuter"]
+  # data[, cOrganNB:= Organ_1]
+  # data[Organ_1 %in% c(
+  #   "Columna",
+  #   "Ben/ledd utenom columna",
+  #   "Columna/ben/ledd"
+  # ), cOrganNB:="Ben/ledd/columna"]
+  # 
+  # data[Organ_1 %in% c(
+  #   "Sentralnervesystem annet enn meninger",
+  #   "Meninger",
+  #   "Meninger/CNS"
+  # ), cOrganNB:="Sentralnervesystem"]
+  # 
+  # data[Organ_1 %in% c(
+  #   "Lymfe/hilusglandler"
+  # ), cOrganNB:="Lymfeknuter"]
+  # 
+  # with(data, table(Organ_1, cOrganNB, useNA="always"))
+  # 
+  # ######
+  # data[, cOrganLungsVsLymphNB := as.character(NA)]
+  # data[!is.na(cOrganNB), cOrganLungsVsLymphNB:="Alle andre TB tilfeller"]
+  # data[cOrganNB == "Lunge", cOrganLungsVsLymphNB:="TB i lunger"]
+  # data[cOrganNB == "Lymfeknuter", cOrganLungsVsLymphNB:="TB i lymfeknuter"]
   
   ######
   data[, cIndikNB := Indik]
@@ -222,8 +221,8 @@ CleanData <- function(data){
     "Ukjent"
   ) | is.na(Dyrk_res), cDyrkResAllOrganNB := "Ukjent/ikke utf\u00F8rt"]
   
-  data[, cDyrkResLungNB := cDyrkResAllOrganNB]
-  data[cOrganNB=="Lunge", cDyrkResLungNB := NA]
+  #data[, cDyrkResLungNB := cDyrkResAllOrganNB]
+  #data[cOrganNB=="Lunge", cDyrkResLungNB := NA]
   
   ######
   data[, cDirluftAllOrganNB := Dirluft_res]
@@ -232,25 +231,25 @@ CleanData <- function(data){
     "Ukjent"
   ) | is.na(Dirluft_res), cDirluftAllOrganNB := "Ukjent/ikke utf\u00F8rt"]
   
-  data[, cDirluftLungNB := cDirluftAllOrganNB]
-  data[cOrganNB=="Lunge", cDirluftLungNB := NA]
+  #data[, cDirluftLungNB := cDirluftAllOrganNB]
+  #data[cOrganNB=="Lunge", cDirluftLungNB := NA]
   
   ######
-  data[,isNeedsReport:=0]
-  data[cOrganNB=="Lunge" & cDyrkResLungNB=="Positivt", isNeedsReport:=1]
+  #data[,isNeedsReport:=0]
+  #data[cOrganNB=="Lunge" & cDyrkResLungNB=="Positivt", isNeedsReport:=1]
   
   ######
-  data[, Rapp_smitteopp:=gsub(" ", "", Rapp_smitteopp)]
-  data[, isReported:=NA]
-  data[isNeedsReport==1, isReported:=0]
-  data[!is.na(isReported) & Rapp_smitteopp=="Ja", isReported:=1]
-  
+  # data[, Rapp_smitteopp:=gsub(" ", "", Rapp_smitteopp)]
+  # data[, isReported:=NA]
+  # data[isNeedsReport==1, isReported:=0]
+  # data[!is.na(isReported) & Rapp_smitteopp=="Ja", isReported:=1]
+  # 
   ######
   for(x in c("R","H","P","E","S")){
     uncleaned <- paste0(x,"_res")
     cleaned <- paste0("is",x,"Res")
     
-    txt <- paste0('data[cDyrkResAllOrganNB=="Positivt",',cleaned,':=0]')
+    txt <- paste0('data[cDyrkResAllOrganNB=="Positiv",',cleaned,':=0]')
     eval(parse(text=txt))
     
     txt <- paste0('data[!is.na(',cleaned,') & ',uncleaned,'%in% c("Lavgradig resistens","Resistent"),',cleaned,':=1]')
@@ -258,9 +257,11 @@ CleanData <- function(data){
   }
   
   ######
-  data[isActive==1 & cDyrkResAllOrganNB=="Positivt", isMDR:=0]
+  data[isActive==1 & cDyrkResAllOrganNB=="Positiv", isMDR:=0]
+  xtabs(~data$cDyrkResAllOrganNB+data$isActive)
+  xtabs(~data$isMDR)
   data[!is.na(isMDR) & isRRes==1 & isHRes==1, isMDR:=1]
-  
+  xtabs(~data$isMDR)
   ######
   data[,cBirthPlaceSovietNB:=cFverdNB]
   
@@ -288,7 +289,7 @@ CleanData <- function(data){
   ), cBirthPlaceSovietNB:="Tidligere Sovjet"]
   
   ######
-  data[cOrganNB=="Lunge" & Kategori=="Tuberkulose for f\u00F8rste gang" & isActive==1, isLungTBFirstTime:=1]
+  #data[cOrganNB=="Lunge" & Kategori=="Tuberkulose for f\u00F8rste gang" & isActive==1, isLungTBFirstTime:=1]
   
   ######
   data[,cTreatmentResNB:=Beh_res]
@@ -321,6 +322,7 @@ CleanData <- function(data){
   ), cTreatmentResCollapsedNB:="Fortsatt under behandling"]
   
   ######
+  unique(data$Kategori)
   data[!is.na(Kategori), isLatentTB:=0]
   data[Kategori=="Forebyggende behandling", isLatentTB:=1]
   

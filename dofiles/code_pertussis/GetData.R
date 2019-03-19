@@ -24,7 +24,7 @@ GetData <- function(FOLDERS){
     
   } else {
     channel <- RODBC::odbcDriverConnect(connection="Driver={SQL Server};SERVER=dm-prod;DATABASE=MsisAnalyse;")
-    masterData <- RODBC::sqlQuery(channel, "SELECT Alder\u00C5r, AlderM\u00E5neder, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned, Pr\u00F8vedato, Metode, InnlagtSykehus, Utfall FROM ViewAnonyme WHERE Diagnose='Kikhoste';")
+    masterData <- RODBC::sqlQuery(channel, "SELECT Alder\u00C5r, AlderM\u00E5neder, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned, Pr\u00F8vedato, Metode, ErInnlagtSykehus, Utfall FROM ViewNominativ WHERE Diagnose='Kikhoste';")
     #masterData <- RODBC::sqlQuery(channel, "SELECT Alaar, Alm, Paar, Pmnd, Pdato, Met, Innlagt, Utfall FROM ViewAnonyme WHERE Diagnose='Kikhoste';")
     
     saveRDS(masterData, file=sprintf("%s/pertussis.RDS",FOLDERS$RESULTS_DATA))

@@ -24,11 +24,11 @@ GetData <- function(FOLDERS){
     
   } else {
     channel <- RODBC::odbcDriverConnect(connection="Driver={SQL Server};SERVER=dm-prod;DATABASE=MsisAnalyse;")
-    masterData <- RODBC::sqlQuery(channel, "SELECT Smittestoff, Alder\u00C5r, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned FROM ViewAnonyme WHERE Diagnose='Syst. meningokokksykdom';")
+    masterData <- RODBC::sqlQuery(channel, "SELECT Smittestoff, Alder\u00C5r, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned FROM ViewNominativ WHERE Diagnose='Syst. meningokokksykdom';")
     
     saveRDS(masterData, file=sprintf("%s/meningococcal.RDS",FOLDERS$RESULTS_DATA))
     
-    names(masterData) <- c("Smstoff", "Alaar", "Alm", "Paar", "Pmnd")
+    names(masterData) <- c("Smstoff", "Alaar", "Paar", "Pmnd")
     
     #Smittestoff -> Smstoff
     #Alder\u00C5r -> Alaar

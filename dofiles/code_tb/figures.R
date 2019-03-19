@@ -273,7 +273,7 @@ Figure5 <- function(data, language="NB", USE_TITLE=TRUE){
   
   pd <- data[isForeignBorn==1]
   RecodeDT(pd,c("Ubesvart"="Ukjent"),"cPernorNB")
-  pd <- pd[,.(isTB=sum(isActive)),by=.(cPernorNB,cyear)]
+  pd <- pd[,.(isTB=sum(isActive,na.rm=T)),by=.(cPernorNB,cyear)]
   pdx <- pd[,.(isTB=sum(isTB)),by=cyear]
   pdx[,cPernorNB:="Totalt utenlandsf\u00F8dte m kjent oppholdstid"]
   setcolorder(pdx,names(pd))
@@ -417,7 +417,7 @@ Figure7 <- function(data, language="NB", USE_TITLE=TRUE){
     "EN"=switch
   )[[language]]
   
-  pd1 <- data[,
+  pd1 <- data[!is.na(isForeignBorn),
               .(val=sum(isLatentTB,na.rm=T)),
               by=.(cyear,isForeignBorn)]
   pd2 <- data[,

@@ -36,7 +36,7 @@ for(SUPERFOLDER in c("ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
       dir.create(file.path(BASE_FOLDER,year,language), recursive=TRUE)
       for(f in c(1:10)){
         Sys.sleep(1)
-        txt <- sprintf("res <- Figure%s(data[cyear<=year],language=language,USE_TITLE=%s)",f,USE_TITLE)
+        txt <- sprintf("res <- Figure%s(data=data[cyear<=year],language=language,USE_TITLE=%s)",f,USE_TITLE)
         eval(parse(text=txt))
         
         saveA4(res[["q"]],
