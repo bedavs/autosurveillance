@@ -20,8 +20,9 @@ GetData <- function(FOLDERS){
   if(org::PROJ$computer_id==1){
     channel <- RODBC::odbcDriverConnect(connection="Driver={SQL Server};SERVER=dm-prod;DATABASE=MsisAnalyse;")
     masterData <- RODBC::sqlQuery(channel, "SELECT MeningokokkSubtype, Alder\u00C5r, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned FROM ViewNominativ WHERE Diagnose='Syst. meningokokksykdom';")
+    RODBC::odbcClose(channel)
     
-    saveRDS(masterData, file=sprintf("%s/meningococcal.RDS",FOLDERS$RESULTS_DATA))
+    saveRDS(masterData, file=sprintf("%s/meningococcal.RDS",org::PROJ$DATA))
     
     names(masterData) <- c("Smstoff", "Alaar", "Paar", "Pmnd")
     
@@ -32,13 +33,17 @@ GetData <- function(FOLDERS){
     #Pr\u00F8vedatoM\u00E5ned -> Pmnd
     #Pr\u00F8vedato -> Pdato
     
-    #saveRDS(masterData, file=sprintf("%s/pneumokokk_%s.RDS",RESULTS_BASE,todaysDate))
-    #write.table(masterData, file=sprintf("%s/pneumokokk_%s.txt",RESULTS_BASE,todaysDate))
-    
-    RODBC::odbcClose(channel)
     masterData <- data.table(masterData)
     
+  } else {
+    masterData <- data.table(readRDS(file.path(
+      org::PROJ$DATA,
+      "meningococcal.RDS"
+    )))
+    
+    names(masterData) <- c("Smstoff", "Alaar", "Paar", "Pmnd")
   }
+    
   
   masterData[,Smstoff:=as.character(Smstoff)]
   #FixNorwegian(masterData,"Smstoff")
@@ -51,3 +56,4 @@ GetData <- function(FOLDERS){
   
   return(masterData)
 }
+

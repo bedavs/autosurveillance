@@ -26,9 +26,14 @@ org::InitialiseProject(
   )
 )
 
-if (.Platform$OS.type == "unix") SavePop(FOLDERS)
-masterData <- GetData(FOLDERS)[Paar >= 2007]
-masterPop <- readRDS(file.path(FOLDERS$DOFILES_DATA, "meningococcal_pop.RDS"))
+
+library(data.table)
+library(ggplot2)
+library(scales)
+
+masterData <- GetData()[Paar >= 2007]
+masterPop <- fhidata::norway_population_current[level=="national"]
+setnames(masterPop,"age","xage")
 
 ageDef <- list(
   "NB" = list(
@@ -102,11 +107,16 @@ stackSkeleton <- list(
 
 for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
   print(SUPERFOLDER)
-  BASE_FOLDER <- BaseFolder(SUPERFOLDER = SUPERFOLDER, FOLDERS = FOLDERS)
   for (LANGUAGE in c("NB", "EN")) {
     for (yearOfInterest in 2015:TODAYS_YEAR) {
       Sys.sleep(1)
-      suppressWarnings(CreateFolders(SUPERFOLDER=SUPERFOLDER, FOLDERS = FOLDERS, yearOfInterest = yearOfInterest, LANGUAGE = LANGUAGE))
+      
+      suppressWarnings(CreateFolders(
+        language=LANGUAGE, 
+        superfolder=SUPERFOLDER, 
+        yearOfInterest=yearOfInterest,
+        seasonOfInterest=NULL
+      ))
   
       stack[[length(stack) + 1]] <- stackSkeleton
       stack[[length(stack)]]$label <- "TableIncidenceByAgeAndSerotype"
@@ -119,9 +129,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "yearOfInterest" = yearOfInterest,
         "ageDef" = ageDef,
         "tableAgesTableAgeAndSerotype" = tableAgesTableAgeAndSerotype,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Tables",
                              "incidence_by_age_and_serotype.csv")
       )
@@ -152,9 +163,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "onlyShowTotal"=FALSE,
         "title"=TITLE,
         "title_y"=TITLE_Y,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_incidence_by_age_serotype_all_ages.png",LANGUAGE))
       )
@@ -185,9 +197,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "onlyShowTotal"=FALSE,
         "title"=TITLE,
         "title_y"=TITLE_Y,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_incidence_by_age_serotype_16-19.png",LANGUAGE))
       )
@@ -220,9 +233,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "onlyShowTotal"=TRUE,
         "title"=TITLE,
         "title_y"=TITLE_Y,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_incidence_by_age_all_ages.png",LANGUAGE))
       )
@@ -253,9 +267,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "onlyShowTotal"=TRUE,
         "title"=TITLE,
         "title_y"=TITLE_Y,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_incidence_by_age_16-19.png",LANGUAGE))
       )
@@ -287,9 +302,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "plotAgesSerotypeByYear" = plotAgesSerotypeByYear1,
         "title"=TITLE,
         "title_y"=TITLE_Y,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_serotype_by_year_allages.png",LANGUAGE))
       )
@@ -319,9 +335,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "plotAgesSerotypeByYear" = plotAgesSerotypeByYear2,
         "title"=TITLE,
         "title_y"=TITLE_Y,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_serotype_by_year_16-19.png",LANGUAGE))
       )
@@ -336,9 +353,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "LANGUAGE" = LANGUAGE,
         "yearOfInterest" = yearOfInterest,
         "ageDef" = ageDef,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Tables",
                              "incidence_by_age.csv")
       )
@@ -353,9 +371,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "LANGUAGE" = LANGUAGE,
         "yearOfInterest" = yearOfInterest,
         "ageDef" = ageDef,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Tables",
                              "incidence_by_month.csv")
       )
@@ -381,9 +400,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "ageDef" = ageDef,
         "title"=titles[["TITLE"]],
         "title_y"=titles[["TITLE_Y"]],
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_incidence_by_month_1year.png",LANGUAGE))
       )
@@ -412,9 +432,10 @@ for(SUPERFOLDER in c("SHAREPOINT","ALL_WITH_TITLES","ALL_WITHOUT_TITLES")){
         "ageDef" = ageDef,
         "title"=TITLE,
         "title_y"=TITLE_Y,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
+        "filename"=file.path(org::PROJ$SHARED_TODAY,
                              LANGUAGE,
+                             SUPERFOLDER,
+                             yearOfInterest,
                              "Figures",
                              sprintf("%s_incidence_by_month_1year_vs_3.png",LANGUAGE))
       )
