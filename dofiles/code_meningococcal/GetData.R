@@ -51,8 +51,9 @@ GetData <- function(FOLDERS){
   masterData[,Smstoff:=trimws(Smstoff,which="both")]
   masterData[Smstoff=="Neisseria meningitidis ina",Smstoff:="Nm ina"]
   masterData[is.na(Smstoff),Smstoff:="Nm ina"]
+  masterData[Smstoff!="Nm ina",Smstoff:=paste0("Nm ",Smstoff)]
   
-  xtabs(~masterData$Smstoff,addNA=T)
+  print(xtabs(~masterData$Smstoff,addNA=T))
   
   return(masterData)
 }
