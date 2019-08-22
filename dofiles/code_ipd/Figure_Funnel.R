@@ -1,4 +1,12 @@
-Figure_Funnel_Season <- function(rawSpecificNumbers,ageListFunnel,LANGUAGE,BASE_FOLDER,seasonOfInterest, seasonList, USE_TITLE=TRUE){
+Figure_Funnel_Season <- function(
+  rawSpecificNumbers,
+  ageListFunnel,
+  LANGUAGE,
+  folder,
+  seasonOfInterest,
+  seasonList,
+  USE_TITLE=TRUE
+  ){
   
   for(a in ageListFunnel[[LANGUAGE]]){
     for(comparison in c("singleYearLast","4yearbaseline")){
@@ -183,16 +191,16 @@ Figure_Funnel_Season <- function(rawSpecificNumbers,ageListFunnel,LANGUAGE,BASE_
       q <- q + theme_gray(base_size=THEME_BASE_SIZE)
       if(comparison=="singleYearLast"){
         saveA4(q,
-               filename=file.path(BASE_FOLDER,gsub("/","_",seasonOfInterest),LANGUAGE,"Figures_serotype_funnel_singleyearlast",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))  
+               filename=file.path(folder,"Figures_serotype_funnel_singleyearlast",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))  
       } else if(comparison=="4yearbaseline"){
         saveA4(q,
-               filename=file.path(BASE_FOLDER,gsub("/","_",seasonOfInterest),LANGUAGE,"Figures_serotype_funnel_4yearbaseline",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))
+               filename=file.path(folder,"Figures_serotype_funnel_4yearbaseline",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))
       }
     }
   }
 }
 
-Figure_Funnel_Year <- function(rawSpecificNumbers,ageListFunnel,LANGUAGE,BASE_FOLDER,yearOfInterest, USE_TITLE=TRUE){
+Figure_Funnel_Year <- function(rawSpecificNumbers,ageListFunnel,LANGUAGE,base_folder,yearOfInterest, USE_TITLE=TRUE){
   
   for(a in ageListFunnel[[LANGUAGE]]){
     for(comparison in c("singleYearLast","4yearbaseline")){
@@ -373,10 +381,10 @@ Figure_Funnel_Year <- function(rawSpecificNumbers,ageListFunnel,LANGUAGE,BASE_FO
       q <- q + theme_gray(base_size=THEME_BASE_SIZE)
       if(comparison=="singleYearLast"){
         saveA4(q,
-               filename=file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_serotype_funnel_singleyearlast",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))  
+               filename=file.path(base_folder,"Figures_serotype_funnel_singleyearlast",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))  
       } else if(comparison=="4yearbaseline"){
         saveA4(q,
-               filename=file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_serotype_funnel_4yearbaseline",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))
+               filename=file.path(base_folder,"Figures_serotype_funnel_4yearbaseline",sprintf("%s_Serotype_%s.png",LANGUAGE,a)))
       }
     }
   }

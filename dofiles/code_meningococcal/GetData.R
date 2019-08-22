@@ -17,14 +17,9 @@ SavePop <- function(FOLDERS){
 }
 
 GetData <- function(FOLDERS){
-  if(.Platform$OS.type=="unix"){
-    masterData <- data.table(readRDS(file.path(
-      "/data",
-      "meningococcal_2018-01-20.RDS")))
-    
-  } else {
+  if(org::PROJ$computer_id==1){
     channel <- RODBC::odbcDriverConnect(connection="Driver={SQL Server};SERVER=dm-prod;DATABASE=MsisAnalyse;")
-    masterData <- RODBC::sqlQuery(channel, "SELECT Smittestoff, Alder\u00C5r, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned FROM ViewNominativ WHERE Diagnose='Syst. meningokokksykdom';")
+    masterData <- RODBC::sqlQuery(channel, "SELECT MeningokokkSubtype, Alder\u00C5r, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned FROM ViewNominativ WHERE Diagnose='Syst. meningokokksykdom';")
     
     saveRDS(masterData, file=sprintf("%s/meningococcal.RDS",FOLDERS$RESULTS_DATA))
     
@@ -50,6 +45,9 @@ GetData <- function(FOLDERS){
   for(i in 0:9) masterData[,Smstoff:=gsub(i,"",Smstoff)]
   masterData[,Smstoff:=trimws(Smstoff,which="both")]
   masterData[Smstoff=="Neisseria meningitidis ina",Smstoff:="Nm ina"]
+  masterData[is.na(Smstoff),Smstoff:="Nm ina"]
+  
+  xtabs(~masterData$Smstoff,addNA=T)
   
   return(masterData)
 }

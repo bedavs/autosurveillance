@@ -1,79 +1,49 @@
-GetData <- function(FOLDERS){
-  if(.Platform$OS.type=="unix"){
-    list.files("/analyses")
-    list.files("/analyses/data_raw")
-    masterData <- data.table(readRDS(file.path(
-      "/data",
-      "tb.RDS")))
-    
-  } else {
+GetData <- function(){
+  if(org::PROJ$computer_id==1){
     channel <- RODBC::odbcDriverConnect(connection="Driver={SQL Server};SERVER=dm-prod;DATABASE=MsisAnalyse;")
     #masterData <- RODBC::sqlQuery(channel, "SELECT Pr\u00F8vedato\u00C5r, HendelseType, F\u00F8deland, MorsF\u00F8deland, FarsF\u00F8deland, F\u00F8deverdensdel, Aldersgruppe, Bostedsfylke, Innsykningsorgan, Indikasjon, Herkomst, PeriodeINorge, DyrkningResultat, MikroskopiLuftveisResultat, Rapp_smitteopp, Rifampicin, Isoniazid, Pyrazinamide, Ethambutol, Streptomycin, Behandlingsresultat, IGRAResultat FROM ViewTuberkulose;")
     #masterData <- RODBC::sqlQuery(channel, "SELECT Paar, Kategori, Fland, Mfland, Ffland, Fverd, Algr, Bofylk, Organ_1, Indik, Herkomst, Pernor, Dyrk_res, Dirluft_res, Rapp_smitteopp, R_res, H_res, P_res, E_res, S_res, Beh_res, IGRA FROM ViewTuberkulose;")
-    masterData <- RODBC::sqlQuery(channel, "SELECT Paar, HendelseType, Fland, Mfland, Ffland, Fverd, Aldgr, Bofylk, Organ, Indik, Herkomst, Pernor, Dyrk_res, Dirluft_res, Rapp_smitteopp, res_R, res_H, res_P, res_E, res_S, Beh_res, IGRA FROM ViewTuberkulose;")
-    
-    saveRDS(masterData, file=sprintf("%s/tb.RDS",FOLDERS$RESULTS_DATA))
-    
-    
+    masterData <- RODBC::sqlQuery(channel, "SELECT Paar, Kategori, HendelseType, Fland, Mfland, Ffland, Fverd, Aldgr, Bofylk, Indik, Herkomst, Pernor, Dyrk_res, Dirluft_res, res_R, res_H, res_P, res_E, res_S, Beh_res, IGRA FROM ViewTuberkulose;")
     RODBC::odbcClose(channel)
-    masterData <- data.table(masterData)
     
-    #saveRDS(masterData, file=sprintf("%s/pneumokokk_%s.RDS",RESULTS_BASE,todaysDate))
-    #write.table(masterData, file=sprintf("%s/pneumokokk_%s.txt",RESULTS_BASE,todaysDate))
+    saveRDS(masterData, file=sprintf("%s/tb.RDS",org::PROJ$DATA))
+    
+  } else {
+    masterData <- readRDS(file.path(
+      org::PROJ$DATA,
+      "tb.RDS"
+    ))
+    
   }
-    names(masterData) <- c(
-      "Paar",
-      "Kategori",
-      "Fland",
-      "Mfland",
-      "Ffland",
-      "Fverd",
-      "Algr",
-      "Bofylk",
-      "Indik",
-      "Herkomst",
-      "Pernor",
-      "Dyrk_res",
-      "Dirluft_res",
-      "R_res",
-      "H_res",
-      "P_res",
-      "E_res",
-      "S_res",
-      "Beh_res",
-      "IGRA"
-      )
-    
-    # MorsF\u00F8deland -> Mfland
-    # FarsF\u00F8deland -> Ffland
-    # F\u00F8deverdensdel -> Fverd
-    # Aldersgruppe -> Algr
-    # Bostedsfylke -> Bofylk
-    # Innsykningsorgan -> Organ_1 *
-    # Indikasjon -> Indikasjon
-    # Herkomst -> Herkomst
-    # PeriodeINorge -> Pernor
-    # DyrkningResultat -> Dyrk_res *
-    # MikroskopiLuftveisResultat -> Dirluft_res
-    # Rapp_smitteopp
-    # Rifampicin -> R_res
-    # Isoniazid -> H_res
-    # Pyrazinamide -> P_res
-    # Ethambutol -> E_res
-    # Streptomycin -> S_res
-    # Behandlingsresultat -> Beh_res
-    # IGRAResultat -> IGRA
+  
+  setDT(masterData)
 
-    #F\u00F8deland -> Fland
-    #HendelseType -> Kategori
-    #Smittestoff -> Smstoff
-    #Alder\u00C5r -> Alaar
-    #AlderM\u00E5neder -> Alm
-    #Pr\u00F8vedato\u00C5r -> Paar
-    #Pr\u00F8vedatoM\u00E5ned -> Pmnd
-    #Pr\u00F8vedato -> Pdato
-    #Metode -> Met
-    #InnlagtSykehus -> Innlagt
+  names(masterData) <- c(
+    "Paar",
+    "Kategori",
+    "HendelseType",
+    "Fland",
+    "Mfland",
+    "Ffland",
+    "Fverd",
+    "Algr",
+    "Bofylk",
+    "Indik",
+    "Herkomst",
+    "Pernor",
+    "Dyrk_res",
+    "Dirluft_res",
+    "R_res",
+    "H_res",
+    "P_res",
+    "E_res",
+    "S_res",
+    "Beh_res",
+    "IGRA"
+    )
+  
+  masterData <- masterData[HendelseType!="Reseptmelding"]
+    
   
   return(masterData)
 }
@@ -106,14 +76,15 @@ CleanData <- function(data){
   data[,cyear:=Paar]
   
   ######
+  data[HendelseType=="Forebyggende behandling", isActive:=0]
   data[!is.na(Kategori), isActive:=1]
   data[Kategori %in% c(
     "Feil diagnose",
-    "Forebyggende behandling",
     "Innflyttet under behandling",
     "Vurderes"), isActive:=0]
   xtabs(~Kategori+isActive,data=data, exclude=NULL)
   with(data, table(Kategori, isActive, useNA="always"))
+  #data[is.na(isActive)]$Paar
   
   ######
   data[!is.na(Fland), isForeignBorn:=1]
@@ -322,9 +293,9 @@ CleanData <- function(data){
   ), cTreatmentResCollapsedNB:="Fortsatt under behandling"]
   
   ######
-  unique(data$Kategori)
-  data[!is.na(Kategori), isLatentTB:=0]
-  data[Kategori=="Forebyggende behandling", isLatentTB:=1]
+  unique(data$HendelseType)
+  data[!is.na(HendelseType), isLatentTB:=0]
+  data[HendelseType=="Forebyggende behandling", isLatentTB:=1]
   
   ######
   data[isLatentTB==1,cIGRAResultNB:="Ukjent/ubesvart/gr\u00E5sone/inkonklusiv IGRA"]

@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  rstudio:
+    image: raw996/dhadley:3.6.0
+    volumes:
+      - $AUTOSURVEILLANCE_GIT:/autosurveillance/
+      - $AUTOSURVEILLANCE_DATA:/data/
+      - $AUTOSURVEILLANCE_RESULTS:/results/
+      - $AUTOSURVEILLANCE_RSTUDIO_BASE:/home/rstudio/
+    environment:
+      - PASSWORD=rstudio1
+      - DISABLE_AUTH=true
+    ports:
+      - "8789:8787"

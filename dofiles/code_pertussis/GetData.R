@@ -16,20 +16,15 @@ SavePop <- function(FOLDERS){
   },TRUE)
 }
 
-GetData <- function(FOLDERS){
-  if(.Platform$OS.type=="unix"){
-    masterData <- data.table(readRDS(file.path(
-      "/data",
-      "pertussis_2017-11-28.RDS")))
-    
-  } else {
+GetData <- function(){
+  if(org::PROJ$computer_id==1){
     channel <- RODBC::odbcDriverConnect(connection="Driver={SQL Server};SERVER=dm-prod;DATABASE=MsisAnalyse;")
     masterData <- RODBC::sqlQuery(channel, "SELECT Alder\u00C5r, AlderM\u00E5neder, Pr\u00F8vedato\u00C5r, Pr\u00F8vedatoM\u00E5ned, Pr\u00F8vedato, Metode, ErInnlagtSykehus, Utfall FROM ViewNominativ WHERE Diagnose='Kikhoste';")
     #masterData <- RODBC::sqlQuery(channel, "SELECT Alaar, Alm, Paar, Pmnd, Pdato, Met, Innlagt, Utfall FROM ViewAnonyme WHERE Diagnose='Kikhoste';")
+    RODBC::odbcClose(channel)
     
-    saveRDS(masterData, file=sprintf("%s/pertussis.RDS",FOLDERS$RESULTS_DATA))
+    saveRDS(masterData, file=sprintf("%s/pertussis.RDS",org::PROJ$DATA))
     
-    names(masterData) <- c("Alaar", "Alm", "Paar", "Pmnd", "Pdato", "Met", "Innlagt", "Utfall")
     #saveRDS(masterData, file=sprintf("%s/pneumokokk_%s.RDS",RESULTS_BASE,todaysDate))
     #write.table(masterData, file=sprintf("%s/pneumokokk_%s.txt",RESULTS_BASE,todaysDate))
     
@@ -42,9 +37,28 @@ GetData <- function(FOLDERS){
     #Metode -> Met
     #InnlagtSykehus -> Innlagt
     
-    RODBC::odbcClose(channel)
+    names(masterData) <- c("Alaar", "Alm", "Paar", "Pmnd", "Pdato", "Met", "Innlagt", "Utfall")
     masterData <- data.table(masterData)
     
+  } else {
+    masterData <- data.table(readRDS(file.path(
+      org::PROJ$DATA,
+      "pertussis.RDS"
+    )))
+    
+    names(masterData) <- c("Alaar", "Alm", "Paar", "Pmnd", "Pdato", "Met", "Innlagt", "Utfall")
+    
+    if(TODAYS_YEAR>max(masterData$Paar)){
+      missingYears <- TODAYS_YEAR:(max(masterData$Paar)+1)
+      retval <- list()
+      retval[[1]] <- masterData
+      for(i in missingYears){
+        retval[[i]] <- masterData[Paar==max(masterData$Paar)]
+        retval[[i]][,Paar:=i]
+        retval[[i]][,Pdato:=as.POSIXct(stringr::str_replace(Pdato,sprintf("^%s",max(masterData$Paar)),as.character(i)))]
+      }
+      masterData <- rbindlist(retval)
+    }
   }
   
   FixNorwegian(masterData,"Utfall")

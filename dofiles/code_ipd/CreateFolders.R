@@ -1,29 +1,68 @@
-CreateFolders <- function(SUPERFOLDER, FOLDERS,yearOfInterest=NULL,seasonOfInterest=NULL,LANGUAGE){
-  BASE_FOLDER <- BaseFolder(SUPERFOLDER = SUPERFOLDER, FOLDERS = FOLDERS)
+CreateFolders <- function(language, superfolder, yearOfInterest=NULL,seasonOfInterest=NULL){
+  folder_year_language <- path(
+    type = "year",
+    language = language,
+    superfolder = superfolder,
+    time = yearOfInterest)
+  
+  folder_season_language <- path(
+    type = "season",
+    language = language,
+    superfolder = superfolder,
+    time = seasonOfInterest)
   
   if(!is.null(yearOfInterest)){
     Sys.sleep(1)
-    dir.create(file.path(BASE_FOLDER,yearOfInterest),recursive=TRUE)
     
-    DeleteAndCreateFolder(file.path(BASE_FOLDER,yearOfInterest,LANGUAGE))
-    DeleteAndCreateFolder(file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Tables"))
+    dir.create(file.path(folder_year_language),recursive=TRUE)
     
+    DeleteAndCreateFolder(file.path(folder_year_language, "Tables"))
     
-    if(!SUPERFOLDER %in% c("SHAREPOINT")){
-      DeleteAndCreateFolder(file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_serotype_funnel_singleyearlast"))
-      DeleteAndCreateFolder(file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_serotype_funnel_4yearbaseline"))
-      DeleteAndCreateFolder(file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_serotype_diversity"))
+    if(!superfolder %in% c("SHAREPOINT")){
+      DeleteAndCreateFolder(file.path(
+        folder_year_language,
+        "Figures_serotype_funnel_singleyearlast"
+      ))
+      
+      DeleteAndCreateFolder(file.path(
+        folder_year_language,
+        "Figures_serotype_funnel_4yearbaseline"
+      ))
+      
+      DeleteAndCreateFolder(file.path(
+        folder_year_language,
+        "Figures_serotype_diversity"
+      ))
     }
     
-    DeleteAndCreateFolder(file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_incidence_vax"))
-    DeleteAndCreateFolder(file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_incidence_age"))
+    DeleteAndCreateFolder(file.path(
+      folder_year_language,
+      "Figures_incidence_vax"
+    ))
+    
+    DeleteAndCreateFolder(file.path(
+      folder_year_language,
+      "Figures_incidence_age"
+    ))
     
   } else if(!is.null(seasonOfInterest)){
-    DeleteAndCreateFolder(file.path(BASE_FOLDER,gsub("/","_",seasonOfInterest),LANGUAGE,"Figures_cumulative"))
+    dir.create(file.path(folder_season_language),recursive=TRUE)
     
-    if(!SUPERFOLDER %in% c("SHAREPOINT")){
-      DeleteAndCreateFolder(file.path(BASE_FOLDER,gsub("/","_",seasonOfInterest),LANGUAGE,"Figures_serotype_funnel_singleyearlast"))
-      DeleteAndCreateFolder(file.path(BASE_FOLDER,gsub("/","_",seasonOfInterest),LANGUAGE,"Figures_serotype_funnel_4yearbaseline"))
+    DeleteAndCreateFolder(file.path(
+      folder_season_language,
+      "Figures_cumulative"
+    ))
+    
+    if(!superfolder %in% c("SHAREPOINT")){
+      DeleteAndCreateFolder(file.path(
+        folder_season_language,
+        "Figures_serotype_funnel_singleyearlast"
+      ))
+      
+      DeleteAndCreateFolder(file.path(
+        folder_season_language,
+        "Figures_serotype_funnel_4yearbaseline"
+      ))
     }
   }
 }

@@ -1,7 +1,15 @@
-Figure_Cumulative <- function(rawGroupNumbers,ageListCumulative,seasonOfInterest,seasonList,LANGUAGE,BASE_FOLDER, USE_TITLE=TRUE){
+Figure_Cumulative <- function(
+  rawGroupNumbers,
+  ageListCumulative,
+  seasonOfInterest,
+  seasonList,
+  LANGUAGE,
+  folder,
+  USE_TITLE=TRUE
+  ){
   
   maxSeason <- seasonOfInterest
-  seasons <- seasonList[which(seasonList==maxSeason):which(seasonList=="2004/2005")]
+  seasons <- seasonList[which(seasonList==maxSeason):which(seasonList=="2005/2006")]
   colouredSeasons <- seasons[1:5]
   
   weekList <- na.omit(unique(rawGroupNumbers[,c("week","s_week")]))
@@ -55,6 +63,6 @@ Figure_Cumulative <- function(rawGroupNumbers,ageListCumulative,seasonOfInterest
     #q <- q + theme(legend.key.size = unit(10, "lines"))
     #q <- q + theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust=0.5))
     saveA4(q,
-           filename=file.path(BASE_FOLDER,gsub("/","_",seasonOfInterest),LANGUAGE,"Figures_cumulative",sprintf("%s_Cumulative_vax_%s.png",LANGUAGE,v)))
+           filename=file.path(folder,"Figures_cumulative",sprintf("%s_Cumulative_vax_%s.png",LANGUAGE,v)))
   }
 }

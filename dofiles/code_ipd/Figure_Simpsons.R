@@ -1,4 +1,4 @@
-Figure_Simpsons <- function(rawSpecificNumbers,ageListRestrictedAll,ageListSimpsons,DATA_CAPTION,yearOfInterest,BASE_FOLDER,LANGUAGE, USE_TITLE=TRUE){
+Figure_Simpsons <- function(rawSpecificNumbers,ageListRestrictedAll,ageListSimpsons,DATA_CAPTION,yearOfInterest,base_folder,LANGUAGE, USE_TITLE=TRUE){
   
   simpsons <- rawSpecificNumbers[year >= 2004 & year<=yearOfInterest & 
                                    time=="year" & 
@@ -28,6 +28,6 @@ Figure_Simpsons <- function(rawSpecificNumbers,ageListRestrictedAll,ageListSimps
   q <- q + theme_gray(base_size=THEME_BASE_SIZE)
   q <- q + theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust=0.5))
   saveA4(q,
-         filename=file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_serotype_diversity",sprintf("%s_Diversity.png",LANGUAGE)))
+         filename=file.path(base_folder,"Figures_serotype_diversity",sprintf("%s_Diversity.png",LANGUAGE)))
   
 }

@@ -1,4 +1,11 @@
-Figure_Incidence_Age <- function(correctedGroupNumbers, yearOfInterest, LANGUAGE, BASE_FOLDER, vaxDefIncidenceAge, USE_TITLE=TRUE){
+Figure_Incidence_Age <- function(
+   correctedGroupNumbers,
+   yearOfInterest,
+   LANGUAGE,
+   base_folder,
+   vaxDefIncidenceAge,
+   USE_TITLE=TRUE
+   ){
    
    for(a in unique(correctedGroupNumbers$age)){
      Sys.sleep(1)
@@ -47,6 +54,6 @@ Figure_Incidence_Age <- function(correctedGroupNumbers, yearOfInterest, LANGUAGE
      #q <- q + theme(legend.key.size = unit(10, "lines"))
      q <- q + theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust=0.5))
      saveA4(q,
-            filename=file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_incidence_age",sprintf("%s_Incidence_age_%s.png",LANGUAGE,gsub("<","LT",a))))
+            filename=file.path(base_folder,"Figures_incidence_age",sprintf("%s_Incidence_age_%s.png",LANGUAGE,gsub("<","LT",a))))
    }
  }

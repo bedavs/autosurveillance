@@ -1,4 +1,4 @@
-Table_Number_Incidence <- function(correctedGroupNumbers,ageDef,yearOfInterest,LANGUAGE,BASE_FOLDER){
+Table_Number_Incidence <- function(correctedGroupNumbers,ageDef,yearOfInterest,LANGUAGE,base_folder){
   
   tab1uncorrected <- correctedGroupNumbers[time=="year"]
   tab1uncorrected[,num:=formatC(num,digits=0,format="f", decimal.mark=",")]
@@ -55,7 +55,7 @@ Table_Number_Incidence <- function(correctedGroupNumbers,ageDef,yearOfInterest,L
   mainTable <- mainTable[-nrow(mainTable)]
   
   write.table(mainTable,
-              file=file.path(BASE_FOLDER,yearOfInterest,LANGUAGE, "Tables","incidence_by_age_and_vaccine.csv"),
+              file=file.path(base_folder, "Tables","incidence_by_age_and_vaccine.csv"),
               row.names=F,
               col.names=FALSE,
               sep=";",

@@ -1,9 +1,7 @@
 #!/bin/bash
 
-source $AUTOSURVEILLANCE_FOLDER/bin/internal_public.sh
+source $AUTOSURVEILLANCE_GIT/bin/internal_public.sh
 export COMPUTER=$HOSTNAME
 
-echo $FOLDER_INFRASTRUCTURE
-
-docker-compose -f $FOLDER_INFRASTRUCTURE/docker-compose-dev.yml up
+docker-compose -f $AUTOSURVEILLANCE_GIT/infautosurveillance/docker-compose.yml up -d
 

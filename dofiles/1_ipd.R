@@ -1,25 +1,36 @@
+if(.Platform$OS.type!="unix"){
+  files <- list.files("//red.fhi.sec/app/R/3.5/")
+  for(p in c("^fhidata_", "^org_")){
+    p1 <- max(files[grep(p, files)])
+    install.packages(paste0("//red.fhi.sec/app/R/3.5/", p1), repos=NULL)
+  }
+}
+
+org::AllowFileManipulationFromInitialiseProject()
+org::InitialiseProject(
+  HOME = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/dofiles/",
+    "/autosurveillance/dofiles/"
+  ),
+  SHARED = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/results/ipd/",
+    "/results/ipd/"
+  ),
+  DATA = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/data/",
+    "/data/"
+  ),
+  folders_to_be_sourced = c(
+    "code_shared",
+    "code_ipd"
+  )
+)
+
 library(data.table)
 library(ggplot2)
 
-if(.Platform$OS.type=="unix"){
-  setwd(file.path("/autosurveillance", "dofiles"))
-} else {
-  setwd(file.path("G:", "Helseregistre", "MSIS",
-    "Sp\u00F8rringer og data UTEN person-id",
-    "Auto_surveillance", "dofiles"))
-}
-
-fileSources = file.path("code_shared",list.files("code_shared",pattern="*.[rR]$"))
-sapply(fileSources,source,.GlobalEnv)
-
-fileSources = file.path("code_ipd",list.files("code_ipd",pattern="*.[rR]$"))
-sapply(fileSources,source,.GlobalEnv)
-
-FOLDERS <- SetDirectories(type="IPD")
-
-if(.Platform$OS.type=="unix") SavePop(FOLDERS)
-masterData <- GetData(FOLDERS)
-masterPop <- readRDS(file.path(FOLDERS$DOFILES_DATA,"ipd_pop.RDS"))
+masterData <- data_get()
+masterPop <- pop_get()
 
 # Original
 # Definition of serotypes according to vaccines
@@ -198,75 +209,161 @@ vaxDefSpecific[["missing"]] <- NA
 
 vaxDefIncidenceAgeMaster <- c("All IPD","NVT","PCV13non7","PPV23nonPCV13","PCV7")
 
-for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
-  print(SUPERFOLDER)
-  BASE_FOLDER <- BaseFolder(SUPERFOLDER = SUPERFOLDER, FOLDERS = FOLDERS)
-  if(SUPERFOLDER %in% "ALL_WITHOUT_TITLES"){
-    USE_TITLE <- FALSE
-  } else {
-    USE_TITLE <- TRUE
-  }
+analyses <- expand.grid(
+  superfolder = c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT"),
+  language = c("NB","EN"),
+  stringsAsFactors = FALSE
+)
+setDT(analyses)
+analyses[, use_title := FALSE]
+analyses[superfolder %in% c("ALL_WITHOUT_TITLES"), use_title:=TRUE]
+
+for(i in 1:nrow(analyses)){
+  a <- analyses[i,]
+  cat("********\n\n",i,"/",nrow(analyses),"\n\n")
+  print(a)
   
-  for(LANGUAGE in c("NB","EN")){
-    # START RUNNING CODE
-    vaxDef <- vaxDefMaster
-    vaxDefIncidenceAge <- vaxDefIncidenceAgeMaster
-    if(LANGUAGE=="NB"){
-      names(vaxDef)[names(vaxDef)=="NVT"] <- "Ikke-vaksine serotyper"
-      vaxDefIncidenceAge[vaxDefIncidenceAge=="NVT"] <- "Ikke-vaksine serotyper"
-    }
+  # START RUNNING CODE
+  vaxDef <- vaxDefMaster
+  vaxDefIncidenceAge <- vaxDefIncidenceAgeMaster
+  if(a$language=="NB"){
+    names(vaxDef)[names(vaxDef)=="NVT"] <- "Ikke-vaksine serotyper"
+    vaxDefIncidenceAge[vaxDefIncidenceAge=="NVT"] <- "Ikke-vaksine serotyper"
+  }
     
-    pop <- CleanPop(masterPop,ageDef[[LANGUAGE]])
-    rawGroupNumbers <- CleanRawNumbers(masterData, ageDef[[LANGUAGE]], vaxDef)
-    rawGroupNumbers <- merge(rawGroupNumbers,pop,by=c("age","year"))
+  pop <- CleanPop(masterPop,ageDef[[a$language]])
+  rawGroupNumbers <- CleanRawNumbers(masterData, ageDef[[a$language]], vaxDef)
+  rawGroupNumbers <- merge(rawGroupNumbers,pop,by=c("age","year"))
     
-    rawSpecificNumbers <- CleanRawNumbers(masterData, ageDef[[LANGUAGE]], vaxDefSpecific)
-    rawSpecificNumbers <- merge(rawSpecificNumbers,pop,by=c("age","year"))
+  rawSpecificNumbers <- CleanRawNumbers(masterData, ageDef[[a$language]], vaxDefSpecific)
+  rawSpecificNumbers <- merge(rawSpecificNumbers,pop,by=c("age","year"))
     
-    correctedGroupNumbers <- CorrectGroupNumbers(rawGroupNumbers)
+  correctedGroupNumbers <- CorrectGroupNumbers(rawGroupNumbers)
    
-    seasonList <- rev(unique(rawSpecificNumbers$season))
+  seasonList <- rev(unique(rawSpecificNumbers[time=="week"]$season))
     
-    for(seasonOfInterest in seasonList[1:3]){
-      CreateFolders(SUPERFOLDER=SUPERFOLDER, FOLDERS=FOLDERS,seasonOfInterest=seasonOfInterest,LANGUAGE=LANGUAGE)
+  for(seasonOfInterest in seasonList[1:3]){
+    print(seasonOfInterest)
+    
+    CreateFolders(
+      language = a$language,
+      superfolder = a$superfolder,
+      seasonOfInterest=seasonOfInterest
+    )
+    
+    folder <- path(
+      type = "season", 
+      language = a$language, 
+      superfolder = a$superfolder,
+      time = seasonOfInterest
+    )
       
-      ## funnel plot for serotypes
-      if(SUPERFOLDER != "SHAREPOINT"){
-        Figure_Funnel_Season(rawSpecificNumbers,ageListFunnel,LANGUAGE,BASE_FOLDER,seasonOfInterest, seasonList, USE_TITLE=USE_TITLE)
-      }
-      
-      ## Figures_cumulative
-      Figure_Cumulative(rawGroupNumbers,ageListCumulative,seasonOfInterest,seasonList,LANGUAGE,BASE_FOLDER, USE_TITLE=USE_TITLE)
-      
+    ## funnel plot for serotypes
+    if(a$superfolder != "SHAREPOINT"){
+      Figure_Funnel_Season(
+        rawSpecificNumbers,
+        ageListFunnel,
+        LANGUAGE=a$language,
+        folder = folder,
+        seasonOfInterest,
+        seasonList,
+        USE_TITLE=a$use_title
+      )
     }
+      
+    ## Figures_cumulative
+    Figure_Cumulative(
+      rawGroupNumbers,
+      ageListCumulative,
+      seasonOfInterest,
+      seasonList,
+      LANGUAGE = a$language,
+      folder = folder, 
+      USE_TITLE=a$use_title
+    )
+      
+  }
      
-    ## TRUNCATING YEARS AS APPROPRIATE
-    for(yearOfInterest in c(TODAYS_YEAR:(TODAYS_YEAR-2))){
-      CreateFolders(SUPERFOLDER=SUPERFOLDER, FOLDERS=FOLDERS,yearOfInterest=yearOfInterest,LANGUAGE=LANGUAGE)
-      ## Serotype specific table
-      Table_Serotype(rawSpecificNumbers,ageDef,yearOfInterest,BASE_FOLDER,LANGUAGE)
-      
-      ## funnel plot for serotypes
-      if(SUPERFOLDER != "SHAREPOINT"){
-        Figure_Funnel_Year(rawSpecificNumbers,ageListFunnel,LANGUAGE,BASE_FOLDER,yearOfInterest, USE_TITLE=USE_TITLE)
-      }
-      
-      # simpsons index
-      if(SUPERFOLDER != "SHAREPOINT"){
-        Figure_Simpsons(rawSpecificNumbers,ageListRestrictedAll,ageListSimpsons,DATA_CAPTION,yearOfInterest,BASE_FOLDER,LANGUAGE, USE_TITLE=USE_TITLE)
-      }
-      
-      ## Grouped table
-      Table_Number_Incidence(correctedGroupNumbers,ageDef,yearOfInterest,LANGUAGE,BASE_FOLDER)
-      
-      ## Figures_incidence_vax
-      correctedGroupNumbers[,age:=factor(age,levels=names(ageDef[[LANGUAGE]]))]
-      
-      Figure_Incidence_Vax(correctedGroupNumbers, ageListRestricted,yearOfInterest,LANGUAGE,BASE_FOLDER, USE_TITLE=USE_TITLE)
-      
-      ## Figure_incidence_age
-      Figure_Incidence_Age(correctedGroupNumbers, yearOfInterest, LANGUAGE, BASE_FOLDER, vaxDefIncidenceAge=vaxDefIncidenceAge, USE_TITLE=USE_TITLE)
+  ## TRUNCATING YEARS AS APPROPRIATE
+  for(yearOfInterest in c(TODAYS_YEAR:(TODAYS_YEAR-2))){
+    print(yearOfInterest)
+    
+    CreateFolders(
+      language = a$language,
+      superfolder = a$superfolder,
+      yearOfInterest=yearOfInterest
+    )
+    
+    base_folder <- path(
+      type = "year", 
+      language = a$language, 
+      superfolder = a$superfolder,
+      time = yearOfInterest
+    )
+    
+    ## Serotype specific table
+    Table_Serotype(
+      rawSpecificNumbers,
+      ageDef,
+      yearOfInterest,
+      base_folder = base_folder,
+      LANGUAGE = a$language
+    )
+    
+    ## funnel plot for serotypes
+    if(a$superfolder != "SHAREPOINT"){
+      Figure_Funnel_Year(
+        rawSpecificNumbers,
+        ageListFunnel,
+        LANGUAGE = a$language,
+        base_folder = base_folder,
+        yearOfInterest,
+        USE_TITLE=a$use_title
+      )
+    
+    # simpsons index
+      Figure_Simpsons(
+        rawSpecificNumbers,
+        ageListRestrictedAll,
+        ageListSimpsons,
+        DATA_CAPTION,
+        yearOfInterest,
+        base_folder = base_folder,
+        LANGUAGE = a$language,
+        USE_TITLE=a$use_title
+      )
     }
+    
+    ## Grouped table
+    Table_Number_Incidence(
+      correctedGroupNumbers,
+      ageDef,
+      yearOfInterest,
+      LANGUAGE = a$language,
+      base_folder = base_folder
+    )
+    
+    ## Figures_incidence_vax
+    correctedGroupNumbers[,age:=factor(age,levels=names(ageDef[[a$language]]))]
+    
+    Figure_Incidence_Vax(
+      correctedGroupNumbers,
+      ageListRestricted,
+      yearOfInterest,
+      LANGUAGE = a$language,
+      base_folder = base_folder,
+      USE_TITLE=a$use_title
+    )
+    
+    ## Figure_incidence_age
+    Figure_Incidence_Age(
+      correctedGroupNumbers,
+      yearOfInterest,
+      LANGUAGE = a$language,
+      base_folder = base_folder,
+      vaxDefIncidenceAge=vaxDefIncidenceAge,
+      USE_TITLE=a$use_title
+    )
   }
 }
 

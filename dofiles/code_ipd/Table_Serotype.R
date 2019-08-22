@@ -1,4 +1,4 @@
-Table_Serotype <- function(rawSpecificNumbers,ageDef,yearOfInterest,BASE_FOLDER,LANGUAGE){
+Table_Serotype <- function(rawSpecificNumbers,ageDef,yearOfInterest,base_folder,LANGUAGE){
   tab <- rawSpecificNumbers[time=="year" & year>=2004 & year<=yearOfInterest]
   tab[,num:=formatC(num,digits=0,format="f", decimal.mark=",")]
   tab <- dcast.data.table(tab, age + vaccine ~ year, value.var="num")
@@ -25,7 +25,7 @@ Table_Serotype <- function(rawSpecificNumbers,ageDef,yearOfInterest,BASE_FOLDER,
   mainTable <- mainTable[-nrow(mainTable)]
   
   write.table(mainTable,
-              file=file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Tables","serotype_specific_frequency.csv"),
+              file=file.path(base_folder,"Tables","serotype_specific_frequency.csv"),
               row.names=F,
               col.names=FALSE,
               sep=";",

@@ -614,7 +614,7 @@ Figure9 <- function(data, language="NB", USE_TITLE=TRUE){
   if(language=="EN") RecodeDT(pd,switch,"newIndik")
   pd[,newIndik := factor(newIndik,levels=legendOptions)]
   
-  pd <- pd[cyear>max(cyear)-10,.(isTB=sum(isActive)),by=.(newIndik,cyear)]
+  pd <- pd[cyear>max(cyear)-10,.(isTB=sum(isActive,na.rm=T)),by=.(newIndik,cyear)]
   setorder(pd,-cyear,newIndik)
   setcolorder(pd,c("cyear","newIndik","isTB"))
   
@@ -705,7 +705,7 @@ switchNB <- c(
   pd <- copy(data)
   pd <- pd[isActive==1 & cyear>max(cyear)-10,.(
     isActive=sum(isActive,na.rm=T),
-    isCulturePos=sum(cDyrkResAllOrganNB=="Positivt",na.rm=T),
+    isCulturePos=sum(cDyrkResAllOrganNB=="Positiv",na.rm=T),
     isRRes=sum(isRRes,na.rm=T),
     isHRes=sum(isHRes,na.rm=T),
     isPRes=sum(isPRes,na.rm=T),

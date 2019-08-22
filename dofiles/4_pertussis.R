@@ -1,25 +1,36 @@
-library(data.table)
-library(ggplot2)
-
-if(.Platform$OS.type=="unix"){
-  setwd(file.path("/autosurveillance", "dofiles"))
-} else {
-  setwd(file.path("G:", "Helseregistre", "MSIS",
-    "Sp\u00F8rringer og data UTEN person-id",
-    "Auto_surveillance", "dofiles"))
+if(.Platform$OS.type!="unix"){
+  files <- list.files("//red.fhi.sec/app/R/3.5/")
+  for(p in c("^fhidata_", "^org_")){
+    p1 <- max(files[grep(p, files)])
+    install.packages(paste0("//red.fhi.sec/app/R/3.5/", p1), repos=NULL)
+  }
 }
 
-fileSources = file.path("code_shared",list.files("code_shared",pattern="*.[rR]$"))
-sapply(fileSources,source,.GlobalEnv)
+org::AllowFileManipulationFromInitialiseProject()
+org::InitialiseProject(
+  HOME = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/dofiles/",
+    "/autosurveillance/dofiles/"
+  ),
+  SHARED = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/results/pertussis/",
+    "/results/pertussis/"
+  ),
+  DATA = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/data/",
+    "/data/"
+  ),
+  folders_to_be_sourced = c(
+    "code_shared",
+    "code_pertussis"
+  )
+)
 
-fileSources = file.path("code_pertussis",list.files("code_pertussis",pattern="*.[rR]$"))
-sapply(fileSources,source,.GlobalEnv)
+library(data.table)
+library(ggplot2)
+library(scales)
 
-FOLDERS <- SetDirectories(type="Pertussis")
-
-if(.Platform$OS.type=="unix") SavePop(FOLDERS)
-masterData <- GetData(FOLDERS)[Paar >= 1996]
-masterPop <- readRDS(file.path(FOLDERS$DOFILES_DATA,"ipd_pop.RDS"))
+masterData <- GetData()[Paar >= 1996]
 
 ageDef <- list(
   "NB"=list(
@@ -242,11 +253,17 @@ stackSkeleton <- list(
 
 for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
   print(SUPERFOLDER)
-  BASE_FOLDER <- BaseFolder(SUPERFOLDER = SUPERFOLDER, FOLDERS = FOLDERS)
   for(LANGUAGE in c("NB","EN")){
     for(yearOfInterest in 2015:TODAYS_YEAR){
       Sys.sleep(1)
-      suppressWarnings(CreateFolders(SUPERFOLDER=SUPERFOLDER,FOLDERS=FOLDERS,yearOfInterest=yearOfInterest,LANGUAGE=LANGUAGE))
+      
+      suppressWarnings(CreateFolders(
+        language=LANGUAGE, 
+        superfolder=SUPERFOLDER, 
+        yearOfInterest=yearOfInterest,
+        seasonOfInterest=NULL
+      ))
+      
       stack[[length(stack)+1]] <- stackSkeleton
       stack[[length(stack)]]$label <- "TableIncidenceByAge"
       stack[[length(stack)]]$data <- "masterData"
@@ -257,11 +274,14 @@ for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
         "LANGUAGE"=LANGUAGE,
         "yearOfInterest"=yearOfInterest,
         "ageDef"=ageDef,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
-                             LANGUAGE,
-                             "Tables",
-                             "incidence_by_age.csv")
+        "filename"=file.path(
+          org::PROJ$SHARED_TODAY,
+          LANGUAGE,
+          SUPERFOLDER,
+          yearOfInterest,
+          "Tables",
+          "incidence_by_age.csv"
+        )
       )
       
       stack[[length(stack)+1]] <- stackSkeleton
@@ -276,11 +296,13 @@ for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
         "ageDef"=ageDef,
         "outcomeAgeDef"=outcomeAgeDef,
         "titleDef"=titleDef,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
-                             LANGUAGE,
-                             "Tables",
-                             "outcome_by_age.csv")
+        "filename"=file.path(
+          org::PROJ$SHARED_TODAY,
+          LANGUAGE,
+          SUPERFOLDER,
+          yearOfInterest,
+          "Tables",
+          "outcome_by_age.csv")
       )
       
       stack[[length(stack)+1]] <- stackSkeleton
@@ -293,11 +315,14 @@ for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
         "LANGUAGE"=LANGUAGE,
         "yearOfInterest"=yearOfInterest,
         "ageDef"=ageDef,
-        "filename"=file.path(BASE_FOLDER,
-                             yearOfInterest,
-                             LANGUAGE,
-                             "Tables",
-                             "methods_by_age.csv")
+        "filename"=file.path(
+          org::PROJ$SHARED_TODAY,
+          LANGUAGE,
+          SUPERFOLDER,
+          yearOfInterest,
+          "Tables",
+          "methods_by_age.csv"
+        )
       )
     
       for(i in 1:2){ 
@@ -322,11 +347,13 @@ for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
           "plotAgesMethods"=get(sprintf("plotAgesMethods%s",i)),
           "title"=titles[["TITLE"]],
           "title_y"=titles[["TITLE_Y"]],
-          "filename"=file.path(BASE_FOLDER,
-                               yearOfInterest,
-                               LANGUAGE,
-                               "Figures",
-                               sprintf("%s_Methods_%s.png",LANGUAGE,i))
+          "filename"=file.path(
+            org::PROJ$SHARED_TODAY,
+            LANGUAGE,
+            SUPERFOLDER,
+            yearOfInterest,
+            "Figures",
+            sprintf("%s_Methods_%s.png",LANGUAGE,i))
         )
         
         titles <- Titles(
@@ -349,9 +376,10 @@ for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
           "ageDef"=ageDef,
           "title"=titles[["TITLE"]],
           "title_y"=titles[["TITLE_Y"]],
-          "filename"=file.path(BASE_FOLDER,
-                               yearOfInterest,
+          "filename"=file.path(org::PROJ$SHARED_TODAY,
                                LANGUAGE,
+                               SUPERFOLDER,
+                               yearOfInterest,
                                "Figures",
                                filename=sprintf("%s_Incidence_Figure_%s.png",LANGUAGE,i))
         )
@@ -377,18 +405,27 @@ for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
           "ageDef"=ageDef,
           "title"=titles[["TITLE"]],
           "title_y"=titles[["TITLE_Y"]],
-          "filename"=file.path(BASE_FOLDER,
-                               yearOfInterest,
-                               LANGUAGE,
-                               "Figures",
-                               filename=sprintf("%s_IncidenceRate_Figure_%s.png",LANGUAGE,i))
+          "filename"=file.path(
+            org::PROJ$SHARED_TODAY,
+            LANGUAGE,
+            SUPERFOLDER,
+            yearOfInterest,
+            "Figures",
+            filename=sprintf("%s_IncidenceRate_Figure_%s.png",LANGUAGE,i))
         )
       }
     }
     
     for(seasonOfInterest in SeasonList(minSeason=2015)){
       Sys.sleep(1)
-      suppressWarnings(CreateFolders(SUPERFOLDER=SUPERFOLDER,FOLDERS=FOLDERS,seasonOfInterest=seasonOfInterest,LANGUAGE=LANGUAGE))
+      
+      suppressWarnings(CreateFolders(
+        language=LANGUAGE, 
+        superfolder=SUPERFOLDER, 
+        yearOfInterest=NULL,
+        seasonOfInterest=seasonOfInterest
+      ))
+      
       for(i in 1:4){
         if(SUPERFOLDER %in% "ALL_WITHOUT_TITLES"){
           USE_TITLE <- FALSE
@@ -408,11 +445,13 @@ for(SUPERFOLDER in c("ALL_WITHOUT_TITLES","ALL_WITH_TITLES","SHAREPOINT")){
           "seasonOfInterest"=seasonOfInterest,
           "ageDef"=ageDef,
           "USE_TITLE"=USE_TITLE,
-          "filename"=file.path(BASE_FOLDER,
-                               gsub("/","_",seasonOfInterest),
-                               LANGUAGE,
-                               "Figures",
-                               sprintf("%s_Cumulative_Figure_%s.png",LANGUAGE,i))
+          "filename"=file.path(
+            org::PROJ$SHARED_TODAY,
+            LANGUAGE,
+            SUPERFOLDER,
+            gsub("/","_",seasonOfInterest),
+            "Figures",
+            sprintf("%s_Cumulative_Figure_%s.png",LANGUAGE,i))
         )
       }
     }
@@ -425,7 +464,7 @@ for(i in 1:length(stack)) print(sprintf("%s %s", i, stack[[i]]$label))
 
 ProcessStack <- function(stack, i){
   s <- stack[[i]]
-  assign("pop",CleanPop(masterPop,ageDef=ageDef[[s$arguments$LANGUAGE]]),.GlobalEnv)
+  assign("pop",CleanPop(ageDef=ageDef[[s$arguments$LANGUAGE]]),.GlobalEnv)
   cleanedData <- s$DataCleaner(data=get(s$data),arguments=s$arguments)
   s$ResultProducer(data=cleanedData,arguments=s$arguments)
 }

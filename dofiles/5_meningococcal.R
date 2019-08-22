@@ -1,23 +1,30 @@
-library(data.table)
-library(ggplot2)
-
-if (.Platform$OS.type == "unix") {
-  setwd(file.path("/autosurveillance", "dofiles"))
-} else {
-  setwd(file.path(
-    "G:", "Helseregistre", "MSIS",
-    "Sp\u00F8rringer og data UTEN person-id",
-    "Auto_surveillance", "dofiles"
-  ))
+if(.Platform$OS.type!="unix"){
+  files <- list.files("//red.fhi.sec/app/R/3.5/")
+  for(p in c("^fhidata_", "^org_")){
+    p1 <- max(files[grep(p, files)])
+    install.packages(paste0("//red.fhi.sec/app/R/3.5/", p1), repos=NULL)
+  }
 }
 
-fileSources <- file.path("code_shared", list.files("code_shared", pattern = "*.[rR]$"))
-sapply(fileSources, source, .GlobalEnv)
-
-fileSources <- file.path("code_meningococcal", list.files("code_meningococcal", pattern = "*.[rR]$"))
-sapply(fileSources, source, .GlobalEnv)
-
-FOLDERS <- SetDirectories(type = "Meningococcal")
+org::AllowFileManipulationFromInitialiseProject()
+org::InitialiseProject(
+  HOME = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/dofiles/",
+    "/autosurveillance/dofiles/"
+  ),
+  SHARED = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/results/meningococcal/",
+    "/results/meningococcal/"
+  ),
+  DATA = c(
+    "G:/Helseregistre/MSIS/MSIS_UtenPersonid/autosurveillance/data/",
+    "/data/"
+  ),
+  folders_to_be_sourced = c(
+    "code_shared",
+    "code_meningococcal"
+  )
+)
 
 if (.Platform$OS.type == "unix") SavePop(FOLDERS)
 masterData <- GetData(FOLDERS)[Paar >= 2007]

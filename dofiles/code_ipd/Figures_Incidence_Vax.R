@@ -1,4 +1,11 @@
-Figure_Incidence_Vax <- function(correctedGroupNumbers, ageListRestricted,yearOfInterest,LANGUAGE,BASE_FOLDER, USE_TITLE=TRUE){
+Figure_Incidence_Vax <- function(
+  correctedGroupNumbers,
+  ageListRestricted,
+  yearOfInterest,
+  LANGUAGE,
+  base_folder,
+  USE_TITLE=TRUE
+  ){
   for(v in unique(correctedGroupNumbers$vaccine)){
     Sys.sleep(1)
     if(v %in% c("All IPD")){
@@ -41,7 +48,7 @@ Figure_Incidence_Vax <- function(correctedGroupNumbers, ageListRestricted,yearOf
     #q <- q + theme(legend.key.size = unit(10, "lines"))
     q <- q + theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust=0.5))
     saveA4(q,
-           filename=file.path(BASE_FOLDER,yearOfInterest,LANGUAGE,"Figures_incidence_vax",sprintf("%s_Incidence_vax_%s.png",LANGUAGE,v)))
+           filename=file.path(base_folder,"Figures_incidence_vax",sprintf("%s_Incidence_vax_%s.png",LANGUAGE,v)))
   }
 }
 

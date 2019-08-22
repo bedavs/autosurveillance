@@ -1,4 +1,6 @@
-CleanPop <- function(masterPop,ageDef){
+CleanPop <- function(ageDef){
+  masterPop <- fhidata::norway_population_current[location_code=="norway"]
+  setnames(masterPop,"age","xage")
   pop <- vector("list",length=length(ageDef))
   for(i in names(ageDef)) pop[[i]] <- copy(masterPop)
   pop <- rbindlist(pop,idcol="age")
